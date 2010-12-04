@@ -1,0 +1,22 @@
+TODO:
+ - undo chain
+ - redo spelling (currently commented out sinec I am missing the cgi)
+ - bind esc to ctrl-[
+ - % navigation 
+ - support for surround (a) and in methods (i) for example di{ to delete inbetween { and }
+ - :help 
+ - :version
+ - multiple window support
+ - uneditable sections?
+ - a ruler at the 72 character mark? possibly word-wrapping?
+ - want to switch between vi/emacs modes?
+ - do I even want emacs mode?
+ - the toolbar is kind of ugly- possibly replace with an image-version-
+   or more likely- replace with styled buttons
+ - macro recording and playback
+ - get rid of use of window.on*** events, switch to addEventListener
+
+BUGS:
+
+ - esc does not exit visual mode
+ - ctrl-w closes window in chrome
