@@ -418,6 +418,54 @@ var jsvi = (function () {
         return false;
     }
 
+    function _calcy(zx, x, g) {
+        if (zx && cursor._lasty !== cursory) {
+            cursor._lasty = cursory;
+            var nh = 0;
+            while (zx && zx !== document.body) {
+                nh += zx.offsetTop;
+                zx = zx.offsetParent;
+            }
+            cursor.style.top = nh + 'px';
+        }
+
+        var z = x.substr(cursorx, 1);
+        var q = g.substr(cursorx, 1).charCodeAt(0);
+        if (cursorx >= x.length || z === undefined || z === "\240" || z === '') {
+            z = ' ';
+        }
+        
+        if (cursor._lastch !== z || cursor._lastgh !== q) {
+            if (z === ' ') {
+                z = "\240";
+                q = 0;
+            }
+            while (cursor.firstChild) {
+                cursor.removeChild(cursor.firstChild);
+            }
+            cursor.appendChild(document.createTextNode(z));
+
+            cursor._lastch = z;
+            cursor._lastgh = q;
+
+            if (q & 1) {
+                cursor.style.fontWeight = 'bold';
+            } else {
+                cursor.style.fontWeight = 'normal';
+            }
+            if (q & 2) {
+                cursor.style.textDecoration = 'underline';
+            } else {
+                cursor.style.textDecoration = 'none';
+            }
+            if (q & 16) {
+                cursor.style.fontStyle = 'italic';
+            } else {
+                cursor.style.fontStyle = 'normal';
+            }
+        }
+    }
+
     function _redraw_term() {
 
         var h = term_rows,
@@ -592,16 +640,20 @@ var jsvi = (function () {
                         } else {
                             term.appendChild(zx);
                         }
-                        if (y === cursory) _calcy(zy, x, g);
+                        if (y === cursory) {
+                            _calcy(zy, x, g);
+                        }
                         continue;
                     }
                 }
 
                 // update
-                while (zx.firstChild) zx.removeChild(zx.firstChild);
+                while (zx.firstChild) {
+                    zx.removeChild(zx.firstChild);
+                }
             } else {
                 zx = document.createElement('PRE');
-                zx.style.display='block';
+                zx.style.display = 'block';
                 zx.style.fontFamily = 'monospace';
                 zx.style.fontSize = '100%';
                 _zmp(zx);
@@ -718,8 +770,8 @@ var jsvi = (function () {
 
         if (!spelling && tospell > 0) {
             spelling = true;
-            var xh = _xhttp();
-            osp=osp.substr(0, osp.length - 1);
+            var xh = new XMLHttpRequest();
+            osp = osp.substr(0, osp.length - 1);
             xh.open("GET", "spell.cgi?" + osp, true);
             xh.onreadystatechange = function () {
                 if (xh.readyState === 4) {
@@ -755,7 +807,7 @@ var jsvi = (function () {
                             brokenwords[term] = true;
                         }
                     }
-                    spelling=false;
+                    spelling = false;
                     window.setTimeout(term_redraw, 10);
                     xh = undefined; // break (deferred)
                 }
@@ -1255,16 +1307,6 @@ var jsvi = (function () {
         return _cursortoxy(x, y);
     }
 
-    function _xhttp() {
-        var xmlhttp=false;
-
-        if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
-                xmlhttp = new XMLHttpRequest();
-        }
-        if (!xmlhttp) return {}; // fake out caller
-            return xmlhttp;
-    }
-
     function term_setmode(n) {
         mode = n;
         lastinsert = '';
@@ -1483,7 +1525,7 @@ var jsvi = (function () {
                 continue;
             }
             var d = (z > 2) ? -1 : 1;
-            var c=z2.substr(z, 1);
+            var c = z2.substr(z, 1);
             while (y >= 0 && y < file.length) {
                 while (x > 0 && x < t.length) {
                     if (t.substr(x, 1) === c) {
@@ -1977,34 +2019,34 @@ var jsvi = (function () {
             return marks[ q.substr(1, 1) ];
         }
         if (q === "\\/" || q === "\\&") {
-            var a=cursory;
-            var b=base;
+            var a = cursory;
+            var b = base;
             term_search(lastsearch, 0, cursory + base, file.length);
-            var c=cursory + base;
-            cursory=a;
-            base=b;
+            var c = cursory + base;
+            cursory = a;
+            base = b;
             return c;
         }
         if (q === "\\?") {
-            var a=cursory;
-            var b=base;
+            var a = cursory;
+            var b = base;
             term_rsearch(lastsearch, 0, cursory + base, file.length);
-            var c=cursory + base;
-            cursory=a;
-            base=b;
+            var c = cursory + base;
+            cursory = a;
+            base = b;
             return c;
         }
         if (q.substr(0, 1) === "/" || q.substr(0, 1) === "?") {
-            var a=cursory;
-            var b=base;
+            var a = cursory;
+            var b = base;
             term_search(q, 0, cursory + base, file.length);
-            var c=cursory + base;
-            cursory=a;
-            base=b;
+            var c = cursory + base;
+            cursory = a;
+            base = b;
             return c;
         }
-        q=parseInt(q) - 1;
-        if (q >= file.length - 1) q=file.length - 1;
+        q = parseInt(q) - 1;
+        if (q >= file.length - 1) q = file.length - 1;
         if (q < 0) q=0;
         return q;
     }
@@ -2056,7 +2098,7 @@ var jsvi = (function () {
             } else if (c === ';') {
                 start = ng[ng.length - 1];
                 ng = _pop(ng);
-                cursory=start;
+                cursory = start;
                 base=0;
                 ng = _pop(ng);
             } else if (c === '$') {
@@ -2073,9 +2115,9 @@ var jsvi = (function () {
                 c = s.substr(i, 1);
                 var qq;
                 if (c === '?') {
-                    qq=term_rsearch;
+                    qq = term_rsearch;
                 } else {
-                    qq=term_search;
+                    qq = term_search;
                 }
                 if (ng.length === 1) {
                     top = ng[0];
@@ -2145,7 +2187,7 @@ var jsvi = (function () {
             return;
         } else if (cmd === 'w') {
             var zx = term_freeze();
-            if (term._formelement) term._formelement.value=zx;
+            if (term._formelement) term._formelement.value = zx;
             statustext = '"/tmp/mess4XbCXM" ' + file.length + 'L, '
                     + zx.length + 'C written';
 
@@ -2391,7 +2433,7 @@ var jsvi = (function () {
                 lastsearch = "/" + s.substr(jj, i - jj);
                 registers["/"] = lastsearch.substr(1, lastsearch.length - 1);
                 i++; // sep
-                jj=i;
+                jj = i;
                 for (; i < s.length; i++) {
                     zj = s.substr(i, 1);
                     if (zj === "\\") {
@@ -2502,51 +2544,6 @@ var jsvi = (function () {
             out += zq;
         }
         return out;
-    }
-    function _calcy(zx, x, g) {
-        if (zx && cursor._lasty !== cursory) {
-            cursor._lasty = cursory;
-            var nh = 0;
-            while (zx && zx !== document.body) {
-                nh += zx.offsetTop;
-                zx = zx.offsetParent;
-            }
-            cursor.style.top = nh + 'px';
-        }
-
-        var z = x.substr(cursorx, 1);
-        var q = g.substr(cursorx, 1).charCodeAt(0);
-        if (cursorx >= x.length || z === undefined || z === "\240" || z === '')
-            z = ' ';
-        
-        if (cursor._lastch !== z || cursor._lastgh !== q) {
-            if (z === ' ') {
-                z = "\240";
-                q = 0;
-            }
-            while (cursor.firstChild)
-                cursor.removeChild(cursor.firstChild);
-            cursor.appendChild(document.createTextNode(z));
-
-            cursor._lastch = z;
-            cursor._lastgh = q;
-
-            if (q & 1) {
-                cursor.style.fontWeight = 'bold';
-            } else {
-                cursor.style.fontWeight = 'normal';
-            }
-            if (q & 2) {
-                cursor.style.textDecoration = 'underline';
-            } else {
-                cursor.style.textDecoration = 'none';
-            }
-            if (q & 16) {
-                cursor.style.fontStyle = 'italic';
-            } else {
-                cursor.style.fontStyle = 'normal';
-            }
-        }
     }
     function term_calcy() {
         // fixup character inside... burrr
@@ -2712,7 +2709,7 @@ var jsvi = (function () {
             e.cancelBubble= true;
             return false;
         } else {
-            e.cancelBubble=false;
+            e.cancelBubble = false;
             return true;
         }
 
@@ -2835,7 +2832,7 @@ var jsvi = (function () {
                 kc = 'x';
             } else {
                 // err...
-                if (!accum) accum=term_rows + 1;
+                if (!accum) accum = term_rows + 1;
                 cursory += parseInt(accum/2) + 2;
                 accum=0;
                 term_scrollto();
@@ -2925,7 +2922,7 @@ var jsvi = (function () {
                 kc = 'u';
             } else {
                 // vi pageup
-                if (!accum) accum=term_rows + 1;
+                if (!accum) accum = term_rows + 1;
                 cursory -= parseInt(accum/2) + 2;
                 accum=0;
                 term_scrollto();
@@ -3590,7 +3587,7 @@ var jsvi = (function () {
                 file[cursory + base] = lx + kc + ly;
                 tags[cursory + base] = gx + String.fromCharCode(tagstyle) + gy;
                 lastinsert += kc;
-                cursorx+=kc.length;
+                cursorx += kc.length;
             }
             term_scrollto();
         }
