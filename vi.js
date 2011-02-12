@@ -419,9 +419,9 @@ var jsvi = (function () {
     }
 
     function _calcy(zx, x, g) {
+        var nh = 0, z, q;
         if (zx && cursor._lasty !== cursory) {
             cursor._lasty = cursory;
-            var nh = 0;
             while (zx && zx !== document.body) {
                 nh += zx.offsetTop;
                 zx = zx.offsetParent;
@@ -429,8 +429,8 @@ var jsvi = (function () {
             cursor.style.top = nh + 'px';
         }
 
-        var z = x.substr(cursorx, 1);
-        var q = g.substr(cursorx, 1).charCodeAt(0);
+        z = x.substr(cursorx, 1);
+        q = g.substr(cursorx, 1).charCodeAt(0);
         if (cursorx >= x.length || z === undefined || z === "\240" || z === '') {
             z = ' ';
         }
@@ -466,6 +466,27 @@ var jsvi = (function () {
         }
     }
 
+    function _zmp(o) {
+        o.style.marginTop = '0px';
+        o.style.marginLeft = '0px';
+        o.style.marginRight = '0px';
+        o.style.marginBottom = '0px';
+        o.style.paddingTop = '0px';
+        o.style.paddingLeft = '0px';
+        o.style.paddingRight = '0px';
+        o.style.paddingBottom = '0px';
+    }
+
+    function _openurl(e) {
+        var u = this._term;
+        window.open(u, '_new');
+        return true;
+    }
+
+    function term_save_undo() {
+        undoset = term_freeze();
+    }
+
     function _redraw_term() {
 
         var h = term_rows,
@@ -474,7 +495,7 @@ var jsvi = (function () {
             ka, kb,
             tospell = 0,
             osp = '',
-            y,
+            y, t,
             tago = [],
             isurl = [],
             ca, cb,
@@ -668,15 +689,17 @@ var jsvi = (function () {
 
                 if (gx !== cx) {
                     if (j !== vj && ax) {
-                        var t = x.substr(vj, (j - vj));
-                        if (!t) t  = '';
+                        t = x.substr(vj, (j - vj));
+                        t = t || '';
                         ax.appendChild(document.createTextNode(t));
-                        if (zx !== ax) zx.appendChild(ax);
+                        if (zx !== ax) {
+                            zx.appendChild(ax);
+                        }
                         vj = j;
                     }
 
                     if (gx > 255) {
-                        var wx = parseInt(gx / 256) - 1;
+                        var wx = parseInt(gx / 256, 10) - 1;
 
                         ax = document.createElement('A');
                         if (isurl[wx]) {
@@ -697,7 +720,7 @@ var jsvi = (function () {
                     } else {
                         ax = document.createElement('SPAN');
                     }
-                    if (gx === 255) gx = 0;
+                    gx = gx === 255 ? 0 : gx;
                     if (gx & 1) {
                         ax.style.fontWeight = 'bold';
                     } else {
@@ -717,7 +740,9 @@ var jsvi = (function () {
                     }
                     if (gx & 8) { // unselectable
                         ax.unselectable = true;
-                        if (ax.setAttribute) ax.setAttribute('unselectable', 'on');
+                        if (ax.setAttribute) {
+                            ax.setAttribute('unselectable', 'on');
+                        }
                         ax.style.color = palette[0];
                         ax.style.backgroundColor = palette[1];
                         ax.style.userSelect = 'none';
@@ -732,9 +757,11 @@ var jsvi = (function () {
                 }
             }
             if (j !== vj) {
-                var t = x.substr(vj, (j - vj) - 1);
+                t = x.substr(vj, (j - vj) - 1);
                 ax.appendChild(document.createTextNode(t));
-                if (zx !== ax) zx.appendChild(ax);
+                if (zx !== ax) {
+                    zx.appendChild(ax);
+                }
                 vj = j;
             }
             ax.appendChild(document.createTextNode("\240"));
@@ -790,7 +817,9 @@ var jsvi = (function () {
                             k = a[j];
                             v = '';
                         }
-                        if (k.substr(0, 1) !== 'c') continue;
+                        if (k.substr(0, 1) !== 'c') {
+                            continue;
+                        }
                         k = k.substr(1, k.length - 1);
                         var term = spellcheck[k];
                         if (v === undefined || v === '') {
@@ -803,7 +832,7 @@ var jsvi = (function () {
                             if (!suggestions[term]) {
                                 suggestions[term] = [];
                             }
-                            suggestions[term][ suggestions[term].length ] = v;
+                            suggestions[term][suggestions[term].length] = v;
                             brokenwords[term] = true;
                         }
                     }
@@ -822,7 +851,6 @@ var jsvi = (function () {
         }
         _update_backing();
     }
-
     function _redraw_term_back() {
         drawiv = undefined;
         _redraw_term();
@@ -836,59 +864,6 @@ var jsvi = (function () {
         drawiv = window.setTimeout(_redraw_term_back, 10);
     }
 
-    function _cursortoxy(x, y) {
-        // this is a little gross...
-        var sx = cursorx,
-            sy = cursory;
-
-        cursorx = parseInt(x / term_cur_width, 10);
-        term_redraw();
-
-        cursory = _yaty(y);
-
-        if (cursory >= (term_rows - 1)) {
-            cursory = sy;
-            cursorx = sx;
-            sy = 0;
-        }
-
-        term_scrollto();
-        term_calcx();
-        if (cursory !== sy) {
-            term_redraw();
-        } else {
-            term_calcy();
-        }
-        _update_backing();
-        return true;
-    }
-    function _willclick(e) {
-        if (window.event) {
-            if (!e) {
-                e = window.event;
-            }
-        }
-        if (!e) {
-            return true;
-        }
-        if (cclick !== undefined) {
-            window.clearTimeout(cclick);
-        }
-        var x = e.clientX,
-            y = e.clientY;
-
-        cclick = window.setTimeout(function () {
-                cclick = undefined;
-                _cursortoxy(x, y);
-            }, 200);
-        return false;
-    }
-    function _subclick(e) {
-        return _willclick(e);
-    }
-    function term_save_undo() {
-        undoset = term_freeze();
-    }
     function _srep(e) {
         if (!e) {
             e = window.event;
@@ -933,6 +908,17 @@ var jsvi = (function () {
         term_redraw();
         return false;
     }
+
+    function _ruo(t) {
+        this.style.color = palette[0];
+        this.style.backgroundColor = palette[1];
+    }
+
+    function _rux(t) {
+        this.style.color = palette[1];
+        this.style.backgroundColor = palette[0];
+    }
+
     function _rl(w, h) {
         var x = document.createElement('DIV');
         x.style.overflow = 'hidden';
@@ -945,42 +931,7 @@ var jsvi = (function () {
         x.style.fontFamily = 'monospace';
         return x;
     }
-    function _ruo(t) {
-        this.style.color = palette[0];
-        this.style.backgroundColor = palette[1];
-    }
-    function _rux(t) {
-        this.style.color = palette[1];
-        this.style.backgroundColor = palette[0];
-    }
-    function _openurl(e) {
-        var u = this._term;
-        window.open(u, '_new');
-        return true;
-    }
-    function _suggest(e) {
-        var z = this;
-        if (window.event) {
-            if (!e) {
-                e = window.event;
-            }
-        }
-        if (e) {
-            if (e.preventDefault) {
-                e.preventDefault();
-            }
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-            e.cancelBubble = true;
-        }
-        (function (q) {
-            window.setTimeout(function () { 
-                _dosuggest(q);
-            }, 10);
-        }(z));
-        return false;
-    }
+
     function _dosuggest(z) {
         var x = 0,
             y = 0,
@@ -1061,7 +1012,7 @@ var jsvi = (function () {
         da._row = wrow;
         da._col = wcol;
         da._len = wlen;
-        da.style.margin= '4px';
+        da.style.margin = '4px';
         da.style.textDecoration = 'none';
         da.style.color = palette[1];
         da.style.backgroundColor = palette[0];
@@ -1099,7 +1050,7 @@ var jsvi = (function () {
         }
 
         if (mw) {
-            mw *= (term_cur_width*2);
+            mw *= (term_cur_width * 2);
             mw += 16;
             suggest.style.width = mw + 'px';
         }
@@ -1132,6 +1083,81 @@ var jsvi = (function () {
         sg = undefined; // break
     }
 
+    function _suggest(e) {
+        var z = this;
+        if (window.event) {
+            if (!e) {
+                e = window.event;
+            }
+        }
+        if (e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            e.cancelBubble = true;
+        }
+        (function (q) {
+            window.setTimeout(function () { 
+                _dosuggest(q);
+            }, 10);
+        }(z));
+        return false;
+    }
+
+
+    function _cursortoxy(x, y) {
+        // this is a little gross...
+        var sx = cursorx,
+            sy = cursory;
+
+        cursorx = parseInt(x / term_cur_width, 10);
+        term_redraw();
+
+        cursory = _yaty(y);
+
+        if (cursory >= (term_rows - 1)) {
+            cursory = sy;
+            cursorx = sx;
+            sy = 0;
+        }
+
+        term_scrollto();
+        term_calcx();
+        if (cursory !== sy) {
+            term_redraw();
+        } else {
+            term_calcy();
+        }
+        _update_backing();
+        return true;
+    }
+    function _willclick(e) {
+        if (window.event) {
+            if (!e) {
+                e = window.event;
+            }
+        }
+        if (!e) {
+            return true;
+        }
+        if (cclick !== undefined) {
+            window.clearTimeout(cclick);
+        }
+        var x = e.clientX,
+            y = e.clientY;
+
+        cclick = window.setTimeout(function () {
+                cclick = undefined;
+                _cursortoxy(x, y);
+            }, 200);
+        return false;
+    }
+    function _subclick(e) {
+        return _willclick(e);
+    }
     function _backing_paste_real() {
         doing_backing_paste = false;
         term_redraw();
@@ -3681,16 +3707,6 @@ var jsvi = (function () {
     function _cursor_fix() {
         term_cur_width = cursor.offsetWidth;
     }
-    function _zmp(o) {
-        o.style.marginTop='0px';
-        o.style.marginLeft='0px';
-        o.style.marginRight='0px';
-        o.style.marginBottom='0px';
-        o.style.paddingTop='0px';
-        o.style.paddingLeft='0px';
-        o.style.paddingRight='0px';
-        o.style.paddingBottom='0px';
-    }
     function editor(t) {
         if (term && term._formelement && term._formelement !== t) {
             editor_disable(false);
@@ -3877,7 +3893,18 @@ var jsvi = (function () {
     }
 
     return {
-        editor: editor,
+        editor: function (textarea) {
+            return editor(textarea);
+        },
+        inject: function (input) {
+            var evt, i;
+
+            for (i = 0; i < input.length; i++) {
+                evt = document.createEvent('Event');
+                evt.which = input.charCodeAt(i);
+                term_keypress_inner(evt);
+            }
+        },
         version: version
     };
 }());
